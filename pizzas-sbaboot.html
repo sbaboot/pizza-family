@@ -70,6 +70,7 @@
     font-family: 'Nunito', sans-serif;
     font-weight: 800;
     font-size: 1em;
+    color: #333;
   }
 
   .person-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,0.12); }
@@ -92,6 +93,44 @@
   .person-btn[data-person="Pierre"].selected    { background: linear-gradient(135deg, #9b59b6, #3498db); }
   .person-btn[data-person="Noemie"].selected    { background: linear-gradient(135deg, #e74c3c, #e91e63); }
   .person-btn[data-person="Sebastien"].selected { background: linear-gradient(135deg, #2c3e50, #34495e); }
+
+  /* ---- Invités dynamiques ---- */
+  .person-btn.guest.selected { background: linear-gradient(135deg, #16a085, #1abc9c); }
+
+  .add-guest-btn {
+    border: 3px dashed #ccc;
+    border-radius: 20px;
+    padding: 16px 8px;
+    cursor: pointer;
+    background: #f9f9f9;
+    text-align: center;
+    transition: all 0.2s;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 1em;
+    color: #aaa;
+  }
+  .add-guest-btn:hover { border-color: #27ae60; color: #27ae60; transform: translateY(-3px); }
+  .add-guest-btn .avatar { font-size: 3em; display: block; margin-bottom: 6px; }
+
+  .guest-wrapper { position: relative; }
+  .remove-guest {
+    position: absolute;
+    top: -8px; right: -8px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    font-size: 0.75em;
+    font-weight: 900;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    line-height: 1;
+  }
+  .remove-guest:hover { background: #c0392b; }
 
   /* ---- Base ---- */
   .base-grid {
@@ -262,7 +301,8 @@
   .order-item[data-person="Louis"]   { background: linear-gradient(135deg, #3498db, #1abc9c); }
   .order-item[data-person="Mathilde"]{ background: linear-gradient(135deg, #e91e63, #ff5722); }
   .order-item[data-person="Pierre"]  { background: linear-gradient(135deg, #9b59b6, #3498db); }
-  .order-item[data-person="Noemie"]  { background: linear-gradient(135deg, #e74c3c, #e91e63); }
+  .order-item[data-person="Noemie"]     { background: linear-gradient(135deg, #e74c3c, #e91e63); }
+  .order-item[data-person="Sebastien"]  { background: linear-gradient(135deg, #2c3e50, #34495e); }
 
   .order-avatar { font-size: 2.5em; }
 
@@ -379,6 +419,9 @@
     <button class="person-btn" data-person="Noemie"    onclick="selectPerson(this)"><span class="avatar">👩</span>Noemie</button>
     <button class="person-btn" data-person="Sebastien" onclick="selectPerson(this)"><span class="avatar">👨‍🍳</span>Sebastien</button>
   </div>
+  <button class="add-guest-btn" style="margin-top:14px; width:100%;" onclick="openGuestPopup()">
+    <span class="avatar">➕</span>Ajouter un invité
+  </button>
 </div>
 
 <!-- Choix de la base -->
@@ -412,7 +455,19 @@
     <button class="topping-btn" data-topping="🌶️" data-name="Piments"      onclick="toggleTopping(this)"><span class="topping-icon">🌶️</span>Piments</button>
     <button class="topping-btn" data-topping="🐟" data-name="Thon"         onclick="toggleTopping(this)"><span class="topping-icon">🐟</span>Thon</button>
     <button class="topping-btn" data-topping="🥚" data-name="Œuf"          onclick="toggleTopping(this)"><span class="topping-icon">🥚</span>Œuf</button>
-    <button class="topping-btn topping-autre" data-topping="⭐" data-name="Autre" onclick="toggleAutre(this)"><span class="topping-icon">✏️</span>Autre…</button>
+    <button class="topping-btn topping-autre" data-topping="⭐" data-name="Autre" onclick="toggleAutre(this)"><span class="topping-icon">✏️</span><span class="topping-label">Autre…</span></button>
+  </div>
+</div>
+
+<!-- Popup Invité -->
+<div class="autre-popup" id="guestPopup">
+  <div class="autre-box">
+    <h3>🧑‍🤝‍🧑 Nouvel invité</h3>
+    <input type="text" id="guestInput" placeholder="Prénom de l'invité…" maxlength="20" />
+    <div class="autre-box-btns">
+      <button class="btn-cancel" onclick="closeGuestPopup()">Annuler</button>
+      <button class="btn-ok"     onclick="confirmGuest()">Ajouter ✓</button>
+    </div>
   </div>
 </div>
 
@@ -472,8 +527,12 @@
   ];
 
   function selectPerson(btn) {
-    document.querySelectorAll('.person-btn').forEach(b => b.classList.remove('selected'));
+    document.querySelectorAll('.person-btn').forEach(b => {
+      b.classList.remove('selected');
+      if (b.classList.contains('guest')) b.style.color = '#333';
+    });
     btn.classList.add('selected');
+    if (btn.classList.contains('guest')) btn.style.color = 'white';
     currentPerson = btn.dataset.person;
     updateOrderBtn();
   }
@@ -485,6 +544,86 @@
     updatePizzaVisual();
     updateOrderBtn();
   }
+
+  // ---- Invités ----
+  const guestGradients = [
+    'linear-gradient(135deg, #16a085, #1abc9c)',
+    'linear-gradient(135deg, #8e44ad, #9b59b6)',
+    'linear-gradient(135deg, #d35400, #e67e22)',
+    'linear-gradient(135deg, #27ae60, #2ecc71)',
+    'linear-gradient(135deg, #2980b9, #3498db)',
+    'linear-gradient(135deg, #c0392b, #e74c3c)',
+  ];
+  let guestCount = 0;
+  const guestRegistry = {}; // name -> { avatar, gradient }
+
+  function openGuestPopup() {
+    document.getElementById('guestInput').value = '';
+    document.getElementById('guestPopup').classList.add('open');
+    setTimeout(() => document.getElementById('guestInput').focus(), 100);
+  }
+
+  function closeGuestPopup() {
+    document.getElementById('guestPopup').classList.remove('open');
+  }
+
+  function confirmGuest() {
+    const name = document.getElementById('guestInput').value.trim();
+    if (!name) return;
+    closeGuestPopup();
+    addGuestBtn(name);
+  }
+
+  const guestAvatars = ['🧑', '👱', '🧔', '👲', '🧕', '👳'];
+
+  function addGuestBtn(name) {
+    const grid = document.querySelector('.people-grid');
+    const gradient = guestGradients[guestCount % guestGradients.length];
+    const avatar   = guestAvatars[guestCount % guestAvatars.length];
+    guestRegistry[name] = { avatar, gradient };
+    guestCount++;
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'guest-wrapper';
+
+    const btn = document.createElement('button');
+    btn.className = 'person-btn guest';
+    btn.dataset.person = name;
+    btn.style.color = '#333';
+    btn.onclick = () => selectPerson(btn);
+    btn.innerHTML = `<span class="avatar">${avatar}</span>${name}`;
+    btn.style.setProperty('--guest-gradient', gradient);
+
+    // Inject selected style dynamically
+    const styleId = 'guest-style-' + name.replace(/\s/g,'');
+    if (!document.getElementById(styleId)) {
+      const s = document.createElement('style');
+      s.id = styleId;
+      s.textContent = `.person-btn[data-person="${CSS.escape(name)}"].selected { background: ${gradient}; }`;
+      document.head.appendChild(s);
+    }
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'remove-guest';
+    removeBtn.title = 'Supprimer';
+    removeBtn.textContent = '✕';
+    removeBtn.onclick = (e) => {
+      e.stopPropagation();
+      if (currentPerson === name) { currentPerson = null; updateOrderBtn(); }
+      wrapper.remove();
+    };
+
+    wrapper.appendChild(removeBtn);
+    wrapper.appendChild(btn);
+    grid.appendChild(wrapper);
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.getElementById('guestPopup').classList.contains('open')) confirmGuest();
+    if (e.key === 'Escape' && document.getElementById('guestPopup').classList.contains('open')) closeGuestPopup();
+  });
+
+  // ---- Invités fin ----
 
   let autreBtn = null;
 
@@ -515,7 +654,7 @@
       autreBtn.querySelector('.topping-icon').textContent = '⭐';
       autreBtn.classList.add('selected');
       // Remplace la span texte (label)
-      autreBtn.childNodes[autreBtn.childNodes.length - 1].textContent = val;
+      autreBtn.querySelector('.topping-label').textContent = val;
       currentToppings.push({ emoji: '⭐', name: val });
       updatePizzaVisual();
       updateOrderBtn();
@@ -526,7 +665,7 @@
     document.getElementById('autrePopup').classList.remove('open');
   }
 
-  // Valider avec Entrée
+  // Valider avec Entrée (popup Autre garniture)
   document.addEventListener('keydown', e => {
     if (e.key === 'Enter' && document.getElementById('autrePopup').classList.contains('open')) confirmAutre();
     if (e.key === 'Escape' && document.getElementById('autrePopup').classList.contains('open')) cancelAutre();
@@ -584,10 +723,12 @@
   function placeOrder() {
     if (!currentPerson || !currentBase) return;
 
+    const personData = people[currentPerson] || guestRegistry[currentPerson] || { avatar: '🧑' };
     const order = {
-      id: Date.now(),
+      id:       Date.now(),
       person:   currentPerson,
-      avatar:   people[currentPerson].avatar,
+      avatar:   personData.avatar,
+      gradient: personData.gradient || null,
       base:     currentBase,
       toppings: [...currentToppings],
     };
@@ -603,7 +744,20 @@
     currentPerson = null;
     currentBase = null;
     currentToppings = [];
-    document.querySelectorAll('.person-btn, .base-btn, .topping-btn').forEach(b => b.classList.remove('selected'));
+    document.querySelectorAll('.person-btn, .base-btn, .topping-btn').forEach(b => {
+      b.classList.remove('selected');
+      if (b.classList.contains('guest')) b.style.color = '#333';
+    });
+
+    // Reset bouton "Autre"
+    const autreButton = document.querySelector('.topping-autre');
+    if (autreButton) {
+      autreButton.querySelector('.topping-icon').textContent = '✏️';
+      autreButton.querySelector('.topping-label').textContent = 'Autre…';
+      autreButton.dataset.name = 'Autre';
+    }
+    autreBtn = null;
+
     updatePizzaVisual();
     updateOrderBtn();
   }
@@ -611,6 +765,46 @@
   function deleteOrder(id) {
     orders = orders.filter(o => o.id !== id);
     renderOrders();
+  }
+
+  function editOrder(id) {
+    const order = orders.find(o => o.id === id);
+    if (!order) return;
+
+    // Supprimer la commande de la liste
+    orders = orders.filter(o => o.id !== id);
+    renderOrders();
+
+    // Remettre la personne
+    currentPerson = order.person;
+    document.querySelectorAll('.person-btn').forEach(b => {
+      b.classList.remove('selected');
+      if (b.classList.contains('guest')) b.style.color = '#333';
+    });
+    const personBtn = document.querySelector(`.person-btn[data-person="${CSS.escape(order.person)}"]`);
+    if (personBtn) {
+      personBtn.classList.add('selected');
+      if (personBtn.classList.contains('guest')) personBtn.style.color = 'white';
+    }
+
+    // Remettre la base
+    currentBase = order.base;
+    document.querySelectorAll('.base-btn').forEach(b => {
+      b.classList.toggle('selected', b.dataset.base === order.base);
+    });
+
+    // Remettre les garnitures
+    currentToppings = [...order.toppings];
+    document.querySelectorAll('.topping-btn').forEach(b => {
+      const active = order.toppings.some(t => t.emoji === b.dataset.topping);
+      b.classList.toggle('selected', active);
+    });
+
+    updatePizzaVisual();
+    updateOrderBtn();
+
+    // Scroll vers le formulaire
+    document.querySelector('.card').scrollIntoView({ behavior: 'smooth' });
   }
 
   function renderOrders() {
@@ -623,14 +817,16 @@
       const baseTxt = o.base === 'tomate' ? '🍅 Sauce tomate' : '🥛 Crème fraîche';
       const toppingEmojis = o.toppings.map(t => t.emoji).join(' ') || '(nature)';
       const toppingNames  = o.toppings.map(t => t.name).join(', ') || 'Nature';
+      const styleAttr = o.gradient ? `style="background:${o.gradient}"` : '';
       return `
-        <div class="order-item" data-person="${o.person}">
+        <div class="order-item" data-person="${o.person}" ${styleAttr}>
           <div class="order-avatar">${o.avatar}</div>
           <div class="order-info">
             <div class="order-name">${o.person}</div>
             <div class="order-detail">${baseTxt} · ${toppingNames}</div>
             <div class="order-toppings">${toppingEmojis}</div>
           </div>
+          <button class="delete-btn" onclick="editOrder(${o.id})" title="Modifier">✏️</button>
           <button class="delete-btn" onclick="deleteOrder(${o.id})" title="Supprimer">🗑️</button>
         </div>`;
     }).join('');
