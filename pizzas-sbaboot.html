@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🍕 Les Pizzas des Flamant</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 50%, #ffcd3c 100%);
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  h1 {
+    font-family: 'Fredoka One', cursive;
+    text-align: center;
+    font-size: 3em;
+    color: white;
+    text-shadow: 3px 3px 0px #c0392b, 6px 6px 15px rgba(0,0,0,0.3);
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: rgba(255,255,255,0.9);
+    font-size: 1.1em;
+    font-weight: 700;
+    margin-bottom: 30px;
+  }
+
+  .card {
+    background: white;
+    border-radius: 24px;
+    padding: 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  }
+
+  .card h2 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.7em;
+    color: #e74c3c;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* ---- Qui commande ---- */
+  .people-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+  }
+
+  .person-btn {
+    border: 3px solid #eee;
+    border-radius: 20px;
+    padding: 16px 8px;
+    cursor: pointer;
+    background: #f9f9f9;
+    text-align: center;
+    transition: all 0.2s;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 1em;
+  }
+
+  .person-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,0.12); }
+
+  .person-btn .avatar {
+    font-size: 3em;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .person-btn.selected {
+    border-color: transparent;
+    color: white;
+    transform: translateY(-3px) scale(1.04);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  }
+
+  .person-btn[data-person="Louis"].selected     { background: linear-gradient(135deg, #3498db, #1abc9c); }
+  .person-btn[data-person="Mathilde"].selected  { background: linear-gradient(135deg, #e91e63, #ff5722); }
+  .person-btn[data-person="Pierre"].selected    { background: linear-gradient(135deg, #9b59b6, #3498db); }
+  .person-btn[data-person="Noemie"].selected    { background: linear-gradient(135deg, #e74c3c, #e91e63); }
+  .person-btn[data-person="Sebastien"].selected { background: linear-gradient(135deg, #2c3e50, #34495e); }
+
+  /* ---- Base ---- */
+  .base-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .base-btn {
+    border: 3px solid #eee;
+    border-radius: 20px;
+    padding: 20px;
+    cursor: pointer;
+    background: #f9f9f9;
+    text-align: center;
+    transition: all 0.2s;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 1.15em;
+  }
+
+  .base-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,0.12); }
+
+  .base-btn .base-img {
+    font-size: 3.5em;
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  .base-btn .base-desc {
+    font-size: 0.75em;
+    font-weight: 600;
+    color: #888;
+    margin-top: 4px;
+  }
+
+  .base-btn.selected {
+    border-color: transparent;
+    color: white;
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  }
+
+  .base-btn[data-base="tomate"].selected  { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+  .base-btn[data-base="creme"].selected   { background: linear-gradient(135deg, #f39c12, #e67e22); }
+  .base-btn.selected .base-desc { color: rgba(255,255,255,0.85); }
+
+  /* ---- Garnitures ---- */
+  .toppings-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .topping-btn {
+    border: 3px solid #eee;
+    border-radius: 16px;
+    padding: 14px 6px;
+    cursor: pointer;
+    background: #f9f9f9;
+    text-align: center;
+    transition: all 0.2s;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 0.85em;
+    color: #444;
+    user-select: none;
+  }
+
+  .topping-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 14px rgba(0,0,0,0.1); }
+
+  .topping-btn .topping-icon { font-size: 2.2em; display: block; margin-bottom: 5px; }
+
+  .topping-btn.selected {
+    border-color: #27ae60;
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    color: white;
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 18px rgba(46,204,113,0.4);
+  }
+
+  /* ---- Pizza visuelle ---- */
+  .pizza-preview {
+    position: relative;
+    width: 240px;
+    height: 240px;
+    margin: 0 auto 20px;
+  }
+
+  .pizza-base {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    position: absolute;
+    top: 0; left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8em;
+    transition: all 0.4s;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  }
+
+  .pizza-base.tomate { background: radial-gradient(circle at 40% 35%, #e74c3c, #922b21); }
+  .pizza-base.creme  { background: radial-gradient(circle at 40% 35%, #fdebd0, #f0c890); }
+  .pizza-base.vide   { background: radial-gradient(circle at 40% 35%, #f5cba7, #d4a46a); }
+
+  .toppings-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .topping-dot {
+    position: absolute;
+    font-size: 1.6em;
+    animation: popIn 0.3s ease-out;
+  }
+
+  @keyframes popIn {
+    from { transform: scale(0) rotate(-20deg); opacity: 0; }
+    to   { transform: scale(1) rotate(0deg);  opacity: 1; }
+  }
+
+  /* ---- Bouton commande ---- */
+  .order-btn {
+    width: 100%;
+    padding: 18px;
+    font-size: 1.3em;
+    font-family: 'Fredoka One', cursive;
+    letter-spacing: 1px;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 6px 20px rgba(231,76,60,0.4);
+    margin-top: 10px;
+  }
+
+  .order-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(231,76,60,0.5); }
+  .order-btn:active { transform: translateY(0); }
+  .order-btn:disabled { background: #bdc3c7; box-shadow: none; cursor: not-allowed; transform: none; }
+
+  /* ---- Commandes passées ---- */
+  .orders-list { display: flex; flex-direction: column; gap: 14px; }
+
+  .order-item {
+    border-radius: 16px;
+    padding: 16px 20px;
+    color: white;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+    animation: slideIn 0.4s ease-out;
+  }
+
+  @keyframes slideIn {
+    from { transform: translateX(30px); opacity: 0; }
+    to   { transform: translateX(0);    opacity: 1; }
+  }
+
+  .order-item[data-person="Louis"]   { background: linear-gradient(135deg, #3498db, #1abc9c); }
+  .order-item[data-person="Mathilde"]{ background: linear-gradient(135deg, #e91e63, #ff5722); }
+  .order-item[data-person="Pierre"]  { background: linear-gradient(135deg, #9b59b6, #3498db); }
+  .order-item[data-person="Noemie"]  { background: linear-gradient(135deg, #e74c3c, #e91e63); }
+
+  .order-avatar { font-size: 2.5em; }
+
+  .order-info { flex: 1; }
+  .order-name { font-family: 'Fredoka One', cursive; font-size: 1.2em; }
+  .order-detail { font-size: 0.9em; opacity: 0.9; margin-top: 3px; }
+  .order-toppings { font-size: 1.4em; margin-top: 5px; }
+
+  /* ---- Autre (préciser) ---- */
+  .autre-popup {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+  }
+  .autre-popup.open { display: flex; }
+  .autre-box {
+    background: white;
+    border-radius: 20px;
+    padding: 28px 24px;
+    width: 320px;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.25);
+    text-align: center;
+  }
+  .autre-box h3 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.5em;
+    color: #e74c3c;
+    margin-bottom: 16px;
+  }
+  .autre-box input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #eee;
+    border-radius: 12px;
+    font-size: 1em;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    outline: none;
+    transition: border 0.2s;
+  }
+  .autre-box input:focus { border-color: #27ae60; }
+  .autre-box-btns { display: flex; gap: 10px; margin-top: 14px; }
+  .autre-box-btns button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 1em;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .autre-box-btns button:hover { opacity: 0.85; }
+  .btn-ok     { background: linear-gradient(135deg, #2ecc71, #27ae60); color: white; }
+  .btn-cancel { background: #f0f0f0; color: #666; }
+
+  .delete-btn {
+    background: rgba(255,255,255,0.25);
+    border: none;
+    border-radius: 10px;
+    padding: 6px 10px;
+    color: white;
+    cursor: pointer;
+    font-size: 1.1em;
+    transition: background 0.2s;
+    align-self: center;
+  }
+  .delete-btn:hover { background: rgba(255,255,255,0.4); }
+
+  .empty-orders {
+    text-align: center;
+    color: #bbb;
+    font-size: 1em;
+    font-style: italic;
+    padding: 20px;
+  }
+
+  .confetti-msg {
+    text-align: center;
+    font-size: 1.1em;
+    font-weight: 800;
+    color: #27ae60;
+    padding: 10px;
+    display: none;
+  }
+
+  /* responsive */
+  @media (max-width: 600px) {
+    h1 { font-size: 2em; }
+    .people-grid { grid-template-columns: repeat(2, 1fr); }
+    .toppings-grid { grid-template-columns: repeat(3, 1fr); }
+    .pizza-preview { width: 180px; height: 180px; }
+    .pizza-base { font-size: 5.5em; }
+  }
+</style>
+</head>
+<body>
+
+<h1>🍕 Les Pizzas des Flamant</h1>
+<p class="subtitle">Construis ta pizza idéale !</p>
+
+<!-- Qui commande ? -->
+<div class="card">
+  <h2>👤 C'est pour qui ?</h2>
+  <div class="people-grid">
+    <button class="person-btn" data-person="Louis"    onclick="selectPerson(this)"><span class="avatar">🧒</span>Louis</button>
+    <button class="person-btn" data-person="Mathilde" onclick="selectPerson(this)"><span class="avatar">👧</span>Mathilde</button>
+    <button class="person-btn" data-person="Pierre"   onclick="selectPerson(this)"><span class="avatar">👦</span>Pierre</button>
+    <button class="person-btn" data-person="Noemie"    onclick="selectPerson(this)"><span class="avatar">👩</span>Noemie</button>
+    <button class="person-btn" data-person="Sebastien" onclick="selectPerson(this)"><span class="avatar">👨‍🍳</span>Sebastien</button>
+  </div>
+</div>
+
+<!-- Choix de la base -->
+<div class="card">
+  <h2>🫙 Quelle base ?</h2>
+  <div class="base-grid">
+    <button class="base-btn" data-base="tomate" onclick="selectBase(this)">
+      <span class="base-img">🍅</span>
+      Sauce Tomate
+      <span class="base-desc">La classique !</span>
+    </button>
+    <button class="base-btn" data-base="creme" onclick="selectBase(this)">
+      <span class="base-img">🥛</span>
+      Crème fraîche
+      <span class="base-desc">Douce et gourmande</span>
+    </button>
+  </div>
+</div>
+
+<!-- Garnitures -->
+<div class="card">
+  <h2>✨ Les garnitures</h2>
+  <div class="toppings-grid">
+    <button class="topping-btn" data-topping="🧀" data-name="Fromage"      onclick="toggleTopping(this)"><span class="topping-icon">🧀</span>Fromage</button>
+    <button class="topping-btn" data-topping="🧈" data-name="Roquefort"     onclick="toggleTopping(this)"><span class="topping-icon">🧈</span>Roquefort</button>
+    <button class="topping-btn" data-topping="🍄" data-name="Champignons"  onclick="toggleTopping(this)"><span class="topping-icon">🍄</span>Champignons</button>
+    <button class="topping-btn" data-topping="🫑" data-name="Poivrons"     onclick="toggleTopping(this)"><span class="topping-icon">🫑</span>Poivrons</button>
+    <button class="topping-btn" data-topping="🫒" data-name="Olives"       onclick="toggleTopping(this)"><span class="topping-icon">🫒</span>Olives</button>
+    <button class="topping-btn" data-topping="🧅" data-name="Oignons"      onclick="toggleTopping(this)"><span class="topping-icon">🧅</span>Oignons</button>
+    <button class="topping-btn" data-topping="🍖" data-name="Jambon"       onclick="toggleTopping(this)"><span class="topping-icon">🍖</span>Jambon</button>
+    <button class="topping-btn" data-topping="🌶️" data-name="Piments"      onclick="toggleTopping(this)"><span class="topping-icon">🌶️</span>Piments</button>
+    <button class="topping-btn" data-topping="🐟" data-name="Thon"         onclick="toggleTopping(this)"><span class="topping-icon">🐟</span>Thon</button>
+    <button class="topping-btn" data-topping="🥚" data-name="Œuf"          onclick="toggleTopping(this)"><span class="topping-icon">🥚</span>Œuf</button>
+    <button class="topping-btn topping-autre" data-topping="⭐" data-name="Autre" onclick="toggleAutre(this)"><span class="topping-icon">✏️</span>Autre…</button>
+  </div>
+</div>
+
+<!-- Popup Autre -->
+<div class="autre-popup" id="autrePopup">
+  <div class="autre-box">
+    <h3>✏️ C'est quoi ?</h3>
+    <input type="text" id="autreInput" placeholder="ex: Mozzarella, Basilic…" maxlength="30" />
+    <div class="autre-box-btns">
+      <button class="btn-cancel" onclick="cancelAutre()">Annuler</button>
+      <button class="btn-ok"     onclick="confirmAutre()">Ajouter ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- Aperçu pizza -->
+<div class="card">
+  <h2>👀 Ton aperçu</h2>
+  <div class="pizza-preview">
+    <div class="pizza-base vide" id="pizzaBase">🫓</div>
+    <div class="toppings-overlay" id="toppingsOverlay"></div>
+  </div>
+  <div class="confetti-msg" id="confettiMsg">🎉 Pizza enregistrée !</div>
+  <button class="order-btn" id="orderBtn" onclick="placeOrder()" disabled>
+    🍕 Passer ma commande !
+  </button>
+</div>
+
+<!-- Commandes -->
+<div class="card">
+  <h2>📋 Les commandes</h2>
+  <div class="orders-list" id="ordersList">
+    <p class="empty-orders">Aucune commande pour l'instant… À vos pizzas ! 🍕</p>
+  </div>
+</div>
+
+<script>
+  const people = {
+    Louis:   { avatar: '🧒' },
+    Mathilde:{ avatar: '👧' },
+    Pierre:  { avatar: '👦' },
+    Noemie:    { avatar: '👩' },
+    Sebastien: { avatar: '👨‍🍳' },
+  };
+
+  let currentPerson   = null;
+  let currentBase     = null;
+  let currentToppings = [];  // {emoji, name}
+  let orders = [];
+
+  // Positions fixes pour les toppings sur la pizza (en %)
+  const toppingPositions = [
+    {top:20, left:35}, {top:15, left:55}, {top:30, left:70},
+    {top:50, left:75}, {top:65, left:60}, {top:70, left:40},
+    {top:60, left:20}, {top:40, left:15}, {top:25, left:48},
+    {top:48, left:45}, {top:35, left:30}, {top:55, left:52},
+  ];
+
+  function selectPerson(btn) {
+    document.querySelectorAll('.person-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    currentPerson = btn.dataset.person;
+    updateOrderBtn();
+  }
+
+  function selectBase(btn) {
+    document.querySelectorAll('.base-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    currentBase = btn.dataset.base;
+    updatePizzaVisual();
+    updateOrderBtn();
+  }
+
+  let autreBtn = null;
+
+  function toggleAutre(btn) {
+    // Si déjà sélectionné, on désélectionne
+    const idx = currentToppings.findIndex(t => t.emoji === '⭐');
+    if (idx !== -1) {
+      currentToppings.splice(idx, 1);
+      btn.classList.remove('selected');
+      btn.querySelector('.topping-icon').textContent = '✏️';
+      btn.dataset.name = 'Autre';
+      updatePizzaVisual();
+      updateOrderBtn();
+      return;
+    }
+    autreBtn = btn;
+    document.getElementById('autreInput').value = '';
+    document.getElementById('autrePopup').classList.add('open');
+    setTimeout(() => document.getElementById('autreInput').focus(), 100);
+  }
+
+  function confirmAutre() {
+    const val = document.getElementById('autreInput').value.trim();
+    if (!val) return;
+    document.getElementById('autrePopup').classList.remove('open');
+    if (autreBtn) {
+      autreBtn.dataset.name = val;
+      autreBtn.querySelector('.topping-icon').textContent = '⭐';
+      autreBtn.classList.add('selected');
+      // Remplace la span texte (label)
+      autreBtn.childNodes[autreBtn.childNodes.length - 1].textContent = val;
+      currentToppings.push({ emoji: '⭐', name: val });
+      updatePizzaVisual();
+      updateOrderBtn();
+    }
+  }
+
+  function cancelAutre() {
+    document.getElementById('autrePopup').classList.remove('open');
+  }
+
+  // Valider avec Entrée
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.getElementById('autrePopup').classList.contains('open')) confirmAutre();
+    if (e.key === 'Escape' && document.getElementById('autrePopup').classList.contains('open')) cancelAutre();
+  });
+
+  function toggleTopping(btn) {
+    const emoji = btn.dataset.topping;
+    const name  = btn.dataset.name;
+    const idx   = currentToppings.findIndex(t => t.emoji === emoji);
+    if (idx === -1) {
+      currentToppings.push({ emoji, name });
+      btn.classList.add('selected');
+    } else {
+      currentToppings.splice(idx, 1);
+      btn.classList.remove('selected');
+    }
+    updatePizzaVisual();
+    updateOrderBtn();
+  }
+
+  function updatePizzaVisual() {
+    const base = document.getElementById('pizzaBase');
+    const overlay = document.getElementById('toppingsOverlay');
+
+    base.className = 'pizza-base';
+    if (currentBase === 'tomate') {
+      base.className += ' tomate';
+      base.textContent = '';
+    } else if (currentBase === 'creme') {
+      base.className += ' creme';
+      base.textContent = '';
+    } else {
+      base.className += ' vide';
+      base.textContent = '🫓';
+    }
+
+    overlay.innerHTML = '';
+    currentToppings.forEach((t, i) => {
+      const pos = toppingPositions[i % toppingPositions.length];
+      const dot = document.createElement('span');
+      dot.className = 'topping-dot';
+      dot.textContent = t.emoji;
+      dot.style.top  = pos.top  + '%';
+      dot.style.left = pos.left + '%';
+      dot.style.transform = 'translate(-50%, -50%)';
+      overlay.appendChild(dot);
+    });
+  }
+
+  function updateOrderBtn() {
+    const btn = document.getElementById('orderBtn');
+    btn.disabled = !(currentPerson && currentBase);
+  }
+
+  function placeOrder() {
+    if (!currentPerson || !currentBase) return;
+
+    const order = {
+      id: Date.now(),
+      person:   currentPerson,
+      avatar:   people[currentPerson].avatar,
+      base:     currentBase,
+      toppings: [...currentToppings],
+    };
+    orders.push(order);
+    renderOrders();
+
+    // Feedback visuel
+    const msg = document.getElementById('confettiMsg');
+    msg.style.display = 'block';
+    setTimeout(() => msg.style.display = 'none', 2000);
+
+    // Reset
+    currentPerson = null;
+    currentBase = null;
+    currentToppings = [];
+    document.querySelectorAll('.person-btn, .base-btn, .topping-btn').forEach(b => b.classList.remove('selected'));
+    updatePizzaVisual();
+    updateOrderBtn();
+  }
+
+  function deleteOrder(id) {
+    orders = orders.filter(o => o.id !== id);
+    renderOrders();
+  }
+
+  function renderOrders() {
+    const list = document.getElementById('ordersList');
+    if (orders.length === 0) {
+      list.innerHTML = '<p class="empty-orders">Aucune commande pour l\'instant… À vos pizzas ! 🍕</p>';
+      return;
+    }
+    list.innerHTML = orders.map(o => {
+      const baseTxt = o.base === 'tomate' ? '🍅 Sauce tomate' : '🥛 Crème fraîche';
+      const toppingEmojis = o.toppings.map(t => t.emoji).join(' ') || '(nature)';
+      const toppingNames  = o.toppings.map(t => t.name).join(', ') || 'Nature';
+      return `
+        <div class="order-item" data-person="${o.person}">
+          <div class="order-avatar">${o.avatar}</div>
+          <div class="order-info">
+            <div class="order-name">${o.person}</div>
+            <div class="order-detail">${baseTxt} · ${toppingNames}</div>
+            <div class="order-toppings">${toppingEmojis}</div>
+          </div>
+          <button class="delete-btn" onclick="deleteOrder(${o.id})" title="Supprimer">🗑️</button>
+        </div>`;
+    }).join('');
+  }
+</script>
+</body>
+</html>
